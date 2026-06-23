@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMS OTP Gratis - Kirim OTP via SMS</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="11" width="18" height="11" rx="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    <circle cx="12" cy="16" r="1"/>
+                </svg>
+                <h1>SMS OTP</h1>
+            </div>
+            <span class="badge badge-free">GRATIS</span>
+        </header>
+
+        <!-- Limit Info Card -->
+        <div class="card limit-card">
+            <div class="limit-info">
+                <div class="limit-icon">📊</div>
+                <div class="limit-details">
+                    <h3>Limit Pengiriman Harian</h3>
+                    <div class="limit-bar">
+                        <div class="limit-progress" id="limitProgress"></div>
+                    </div>
+                    <p id="limitText">1 dari 1 SMS gratis tersedia hari ini</p>
+                </div>
+            </div>
+            <div class="limit-reset">
+                <small>🔄 Reset: <span id="resetTime">00:00</span></small>
+            </div>
+        </div>
+
+        <!-- Main App Card -->
+        <div class="card main-card">
+            <!-- Step 1: Input Nomor HP -->
+            <div class="step active" id="step1">
+                <div class="step-header">
+                    <div class="step-number">1</div>
+                    <h2>Masukkan Nomor HP</h2>
+                </div>
+                <div class="form-group">
+                    <label for="phoneNumber">Nomor HP Tujuan</label>
+                    <div class="phone-input">
+                        <select id="countryCode">
+                            <option value="+62">🇮🇩 +62</option>
+                            <option value="+1">🇺🇸 +1</option>
+                            <option value="+44">🇬🇧 +44</option>
+                            <option value="+65">🇸🇬 +65</option>
+                            <option value="+60">🇲🇾 +60</option>
+                            <option value="+66">🇹🇭 +66</option>
+                            <option value="+91">🇮🇳 +91</option>
+                            <option value="+81">🇯🇵 +81</option>
+                            <option value="+82">🇰🇷 +82</option>
+                            <option value="+86">🇨🇳 +86</option>
+                            <option value="+61">🇦🇺 +61</option>
+                            <option value="+49">🇩🇪 +49</option>
+                        </select>
+                        <input 
+                            type="tel" 
+                            id="phoneNumber" 
+                            placeholder="81234567890" 
+                            maxlength="15"
+                        >
+                    </div>
+                    <small class="hint">Format: tanpa angka 0 di depan (contoh: 81234567890)</small>
+                </div>
+                <div class="form-group">
+                    <label for="apiKey">API Key (Opsional)</label>
+                    <input 
+                        type="text" 
+                        id="apiKey" 
+                        placeholder="textbelt (default - 1 SMS/hari gratis)"
+                    >
+                    <small class="hint">💡 Gunakan key "textbelt" untuk 1 SMS/hari gratis. Beli key di <a href="https://textbelt.com" target="_blank">textbelt.com</a> untuk unlimited.</small>
+                </div>
+                <div class="form-group">
+                    <label>Pengaturan OTP</label>
+                    <div class="otp-settings">
+                        <div class="setting">
+                            <label>Digit OTP</label>
+                            <select id="otpDigits">
+                                <option value="4">4 Digit</option>
+                                <option value="6" selected>6 Digit</option>
+                            </select>
+                        </div>
+                        <div class="setting">
+                            <label>Expired Dalam</label>
+                            <select id="otpExpiry">
+                                <option value="3">3 Menit</option>
+                                <option value="5" selected>5 Menit</option>
+                                <option value="10">10 Menit</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn btn-primary" id="btnGenerate" onclick="generateAndSendOTP()">
+                    <span id="btnGenerateText">🚀 Generate & Kirim OTP</span>
+                </button>
+            </div>
+
+            <!-- Step 2: OTP Terkirim -->
+            <div class="step" id="step2">
+                <div class="step-header">
+                    <div class="step-number">2</div>
+                    <h2>OTP Terkirim!</h2>
+                </div>
+                <div class="success-box">
+                    <div class="success-icon">✅</div>
+                    <p>Kode OTP telah dikirim ke</p>
+                    <p class="phone-display" id="sentPhoneNumber">+62 812-3456-7890</p>
+                </div>
+
+                <div class="countdown-box">
+                    <p>⏳ OTP berlaku selama:</p>
+                    <div class="countdown" id="countdown">05:00</div>
+                </div>
+
+                <div class="otp-preview" id="otpPreviewBox">
+                    <p>📱 OTP yang dikirim (preview untuk testing):</p>
+                    <div class="otp-code-display" id="sentOtpCode">------</div>
+                    <small class="hint">⚠️ Ini hanya muncul untuk testing. Di produksi, OTP hanya terlihat di HP penerima.</small>
+                </div>
+
+                <div class="form-group">
+                    <label>Masukkan Kode OTP</label>
+                    <div class="otp-inputs" id="otpInputs">
+                        <input type="text" maxlength="1" class="otp-digit" data-index="0">
+                        <input type="text" maxlength="1" class="otp-digit" data-index="1">
+                        <input type="text" maxlength="1" class="otp-digit" data-index="2">
+                        <input type="text" maxlength="1" class="otp-digit" data-index="3">
+                        <input type="text" maxlength="1" class="otp-digit" data-index="4">
+                        <input type="text" maxlength="1" class="otp-digit" data-index="5">
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="verifyOTP()">🔍 Verifikasi OTP</button>
+                    <button class="btn btn-secondary" onclick="resendOTP()">🔄 Kirim Ulang</button>
+                </div>
+            </div>
+
+            <!-- Step 3: Verifikasi Berhasil -->
+            <div class="step" id="step3">
+                <div class="success-animation">
+                    <div class="checkmark">
+                        <svg viewBox="0 0 52 52">
+                            <circle cx="26" cy="26" r="25" fill="none"/>
+                            <path fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+                        </svg>
+                    </div>
+                    <h2>Verifikasi Berhasil!</h2>
+                    <p>Nomor <strong id="verifiedPhone">+62 812-3456-7890</strong> telah terverifikasi.</p>
+                </div>
+                <button class="btn btn-primary" onclick="resetApp()">🔄 Verifikasi Nomor Lain</button>
+            </div>
+        </div>
+
+        <!-- History Card -->
+        <div class="card history-card">
+            <h3>📋 Riwayat Pengiriman</h3>
+            <div class="history-list" id="historyList">
+                <p class="empty-state">Belum ada riwayat pengiriman</p>
+            </div>
+        </div>
+
+        <!-- Info Footer -->
+        <footer class="footer">
+            <div class="info-box">
+                <h4>ℹ️ Informasi Limit SMS Gratis</h4>
+                <ul>
+                    <li><strong>TextBelt (Gratis):</strong> 1 SMS/hari per IP address</li>
+                    <li><strong>TextBelt (Berbayar):</strong> ~$10 untuk 200 SMS</li>
+                    <li><strong>EasySendSMS:</strong> 15 SMS gratis trial</li>
+                    <li><strong>Twilio Trial:</strong> ~$15 credit gratis untuk trial</li>
+                </ul>
+                <p class="note">💡 Tips: Untuk testing development, gunakan mode preview OTP tanpa perlu kirim SMS.</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <p>Mengirim SMS...</p>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
